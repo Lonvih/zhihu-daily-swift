@@ -18,6 +18,7 @@ class BannerView: UICollectionViewCell, UICollectionViewDelegate, UICollectionVi
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         return cv
     }()
+    let pageControll: UIPageControl = UIPageControl()
     
     var banners: [BannerModel]? {
         didSet {
@@ -29,23 +30,28 @@ class BannerView: UICollectionViewCell, UICollectionViewDelegate, UICollectionVi
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        addSubview(collectionView)
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.register(BannerCell.self, forCellWithReuseIdentifier: bannerCellId)
-        collectionView.isPagingEnabled = true
-        collectionView.showsHorizontalScrollIndicator = false
-        setConstrains()
+        initViews()
     }
 
     required init?(coder aDecoder: NSCoder) {
         fatalError()
     }
     
-    func setConstrains() {
+    func initViews() {
+        addSubview(collectionView)
+        addSubview(pageControll)
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.register(BannerCell.self, forCellWithReuseIdentifier: bannerCellId)
+        collectionView.isPagingEnabled = true
+        collectionView.showsHorizontalScrollIndicator = false
         collectionView.snp.makeConstraints { (make) in
             make.height.equalTo(200)
             make.left.top.right.bottom.equalTo(self).offset(0)
+        }
+        pageControll.snp.makeConstraints { (make) in
+            make.height.equalTo(30)
+            make.left.right.bottom.equalTo(self)
         }
     }
     
@@ -62,9 +68,15 @@ class BannerView: UICollectionViewCell, UICollectionViewDelegate, UICollectionVi
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return banners?.count ?? 0
+        let count = banners?.count ?? 0
+        pageControll.numberOfPages = count
+        return count
     }
     
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        let curPage = Int(scrollView.contentOffset.x) / Int(collectionView.frame.width)
+        pageControll.currentPage = curPage
+    }
 }
 
 class BannerCell: UICollectionViewCell {
@@ -75,25 +87,28 @@ class BannerCell: UICollectionViewCell {
         imageView = UIImageView()
         titleView = UILabel()
         super.init(frame: frame)
-        setViewsConstrains()
+        initViews()
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError()
     }
     
-    func setViewsConstrains() {
+    func initViews() {
         addSubview(imageView)
         addSubview(titleView)
         titleView.textColor = .white
         titleView.font = UIFont.systemFont(ofSize: 21)
-        titleView.numberOfLines = 2
+        titleView.numberOfLines = 0
+        titleView.sizeToFit()
+        imageView.contentMode = .scaleAspectFill
+        
         imageView.snp.makeConstraints { (make) in
             make.left.right.top.equalTo(self).offset(0)
-            make.height.equalTo(200)
+            make.height.equalTo(self)
         }
         titleView.snp.makeConstraints { (make) in
-            make.height.equalTo(50)
+            make.height.lessThanOrEqualTo(30)
             make.left.equalTo(self).offset(15)
             make.right.equalTo(self).offset(-15)
             make.bottom.equalTo(self).offset(-36)
